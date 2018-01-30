@@ -19,6 +19,16 @@ interface ECCInfo {
   codewordsInGroup2: number;
 }
 
+interface CodewordBlock {
+  group: number;
+  block: number;
+  bits: string;
+  codewords: string[];
+  codewordsInt: number[];
+  eccWords: string[];
+  eccWordsInt: number[];
+}
+
 enum ECCLevel { L, M, Q, H }
 
 enum EncodingMode {
@@ -169,6 +179,23 @@ export class QArr {
     // TODO
     
     // calculating error correction words
+    const codewordWithECC: CodewordBlock[] = [];
+    for (let i = 0; i < eccInfo.blocksInGroup1; i++) {
+      const bitStr = bits.substr(i * eccInfo.codewordsInGroup1 * 8, eccInfo.codewordsInGroup1 * 8);
+      var bitBlockList = this.BinaryStringToBitBlockList(bitStr);
+      var bitBlockListDec = this.BinaryStringListToDecList(bitBlockList);
+      var eccWordList = this.CalculateECCWords(bitStr, eccInfo);
+      var eccWordListDec = this.BinaryStringListToDecList(eccWordList);
+      codewordWithECC.push({
+        group: 1,
+        block: i + 1,
+        bits: bitStr,
+        codewords: bitBlockList,
+        eccWords: eccWordList,
+        codewordsInt: bitBlockListDec,
+        eccWordsInt: eccWordListDec
+      });
+  }
 
     // interleave code words
 
@@ -262,6 +289,10 @@ export class QArr {
        binary = Array.from({ length: padleft }, (v, k) => '0').join().concat(binary);
     }
     return binary;
+  }
+
+  private btbbl(bits: string) {
+    Array.from(bits).map((v, i) => ({ key: i, value: v }))
   }
 
   private getCountIndicatorLength(version: number, encoding: EncodingMode) {
