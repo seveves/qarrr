@@ -147,12 +147,20 @@ function min<T>(arr: T[], gt: (min: T, cur: T) => boolean) {
   return arr.slice(1).reduce((min, cur) => gt(min, cur)?cur:min, arr[0]);
 }
 
+function chunks<T>(arr: T[], size: number): T[][] {
+  let output: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    output.push(arr.slice(i, i + size));
+  }
+  return output;
+}
+
 const capacityTable = createCapacityTable();
 const capacityECCTable = createCapacityECCTable();
 
 export class QArr {
-  public create(text: string, ecc: ECCLevel, forceUtf8?: boolean) {
-    const encoding = this.getEncoding(text, forceUtf8);
+  public create(text: string, ecc: ECCLevel) {
+    const encoding = this.getEncoding(text);
     const coded = this.textToBinary(text, encoding);
     const version = this.getVersion(text.length, encoding, ecc);
     const modeIndicator = this.dtb(encoding, 4);
@@ -182,7 +190,7 @@ export class QArr {
     const codewordWithECC: CodewordBlock[] = [];
     for (let i = 0; i < eccInfo.blocksInGroup1; i++) {
       const bitStr = bits.substr(i * eccInfo.codewordsInGroup1 * 8, eccInfo.codewordsInGroup1 * 8);
-      var bitBlockList = this.BinaryStringToBitBlockList(bitStr);
+      var bitBlockList = this.btbbl(bitStr);
       var bitBlockListDec = this.BinaryStringListToDecList(bitBlockList);
       var eccWordList = this.CalculateECCWords(bitStr, eccInfo);
       var eccWordListDec = this.BinaryStringListToDecList(eccWordList);
@@ -213,11 +221,8 @@ export class QArr {
     return min<{ version: number, capacity: number }>(version, (v1, v2) => v1.version > v2.version).version;
   }
 
-  private getEncoding(text: string, forceUtf8?: boolean) {
+  private getEncoding(text: string) {
     let result = EncodingMode.Numeric;
-    if (forceUtf8 === true) {
-      return EncodingMode.Byte;
-    }
 
     for (let index = 0; index < text.length; index++) {
       const char = text[index];
@@ -239,7 +244,7 @@ export class QArr {
       case EncodingMode.Alphanumeric:
         return this.textToBinaryAlphanumeric(text);
       case EncodingMode.Byte:
-        throw new Error('binary byte not yet implemented.');
+        return this.textToBinaryByte(text);
       default:
         return '';
     }
@@ -278,6 +283,18 @@ export class QArr {
       }
       return codeText;
   }
+
+  private textToBinaryByte(text: string) {
+    let codeText = '';
+    const codeBytes = this.toByteArray(text);
+
+    for (let index = 0; index < codeBytes.length; index++) {
+      const codeByte = codeBytes[index];
+      codeText += this.dtb(codeByte, 8);
+    }
+
+    return codeText;
+  }
   
   private btd(binary: string) {
     return parseInt(binary, 2);
@@ -291,8 +308,38 @@ export class QArr {
     return binary;
   }
 
+  private toByteArray(str) {
+    var bytes = [];
+    for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) {
+          bytes.push(charcode);
+        } else if (charcode < 0x800) {
+          bytes.push(0xc0 | (charcode >> 6), 
+                     0x80 | (charcode & 0x3f));
+        } else if (charcode < 0xd800 || charcode >= 0xe000) {
+          bytes.push(0xe0 | (charcode >> 12), 
+                     0x80 | ((charcode >> 6) & 0x3f), 
+                     0x80 | (charcode & 0x3f));
+        } else {
+          i++;
+          charcode = 0x10000 + (((charcode & 0x3ff) << 10)
+                    | (str.charCodeAt(i) & 0x3ff));
+          bytes.push(0xf0 | (charcode >> 18), 
+                     0x80 | ((charcode >> 12) & 0x3f), 
+                     0x80 | ((charcode >> 6) & 0x3f), 
+                     0x80 | (charcode & 0x3f));
+        }
+    }
+    return bytes;
+  }
+
   private btbbl(bits: string) {
-    Array.from(bits).map((v, i) => ({ key: i, value: v }))
+    return chunks(Array.from(bits), 8).reduce((p, c) => [ ...p, c.join() ], []);
+  }
+
+  private List<int> BinaryStringListToDecList(List<string> binaryStringList) {
+      return binaryStringList.Select(binaryString => this.BinToDec(binaryString)).ToList();
   }
 
   private getCountIndicatorLength(version: number, encoding: EncodingMode) {
