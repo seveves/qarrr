@@ -1,43 +1,7 @@
-interface VersionInfoDetails {
-  ecc: ECCLevel;
-  capacitySet: { [key: number]: number };
-}
-
-interface VersionInfo {
-  version: number;
-  details: VersionInfoDetails[];
-}
-
-interface ECCInfo {
-  version: number;
-  ecc: ECCLevel;
-  totalDataCodewords: number;
-  eccPerBlock: number;
-  blocksInGroup1: number;
-  codewordsInGroup1: number;
-  blocksInGroup2: number;
-  codewordsInGroup2: number;
-}
-
-interface CodewordBlock {
-  group: number;
-  block: number;
-  bits: string;
-  codewords: string[];
-  codewordsInt: number[];
-  eccWords: string[];
-  eccWordsInt: number[];
-}
-
-enum ECCLevel { L, M, Q, H }
-
-enum EncodingMode {
-  Numeric = 1,
-  Alphanumeric = 2,
-  Byte = 4,
-  Kanji = 8,
-  ECI = 7
-}
+import { ECCLevel, EncodingMode } from './enums';
+import { CodewordBlock, ECCInfo, VersionInfo, VersionInfoDetails } from './models';
+import { chunks, min, btd, dtb } from './utils';
+import * as PolynomUtils from './polynom';
 
 const nums = Array.from({ length: 10 }, (v, k) => ''+k);
 const abcz = Array.from({ length: 26 }, (v, k) => String.fromCharCode(65 + k));
@@ -143,18 +107,6 @@ function createCapacityECCTable() {
   return capacityECCTable;
 }
 
-function min<T>(arr: T[], gt: (min: T, cur: T) => boolean) {
-  return arr.slice(1).reduce((min, cur) => gt(min, cur)?cur:min, arr[0]);
-}
-
-function chunks<T>(arr: T[], size: number): T[][] {
-  let output: T[][] = [];
-  for (let i = 0; i < arr.length; i += size) {
-    output.push(arr.slice(i, i + size));
-  }
-  return output;
-}
-
 const capacityTable = createCapacityTable();
 const capacityECCTable = createCapacityECCTable();
 
@@ -163,8 +115,8 @@ export class QArr {
     const encoding = this.getEncoding(text);
     const coded = this.textToBinary(text, encoding);
     const version = this.getVersion(text.length, encoding, ecc);
-    const modeIndicator = this.dtb(encoding, 4);
-    const countIndicator = this.dtb(text.length, this.getCountIndicatorLength(version, encoding));
+    const modeIndicator = dtb(encoding, 4);
+    const countIndicator = dtb(text.length, this.getCountIndicatorLength(version, encoding));
     let bits = modeIndicator + countIndicator + coded;
 
     // filling up data code word
@@ -184,15 +136,13 @@ export class QArr {
       bits = bits.substr(0, dataLength);
     }
 
-    // TODO
-    
     // calculating error correction words
     const codewordWithECC: CodewordBlock[] = [];
     for (let i = 0; i < eccInfo.blocksInGroup1; i++) {
       const bitStr = bits.substr(i * eccInfo.codewordsInGroup1 * 8, eccInfo.codewordsInGroup1 * 8);
       const bitBlockList = this.binaryStringToBitBlocks(bitStr);
       const bitBlockListDec = this.binaryStringsToDecimals(bitBlockList);
-      const eccWordList = this.CalculateECCWords(bitStr, eccInfo);
+      const eccWordList = this.calculateECCWords(bitStr, eccInfo);
       const eccWordListDec = this.binaryStringsToDecimals(eccWordList);
       codewordWithECC.push({
         group: 1,
@@ -203,11 +153,70 @@ export class QArr {
         codewordsInt: bitBlockListDec,
         eccWordsInt: eccWordListDec
       });
-  }
+    }
+    bits = bits.substr(eccInfo.blocksInGroup1 * eccInfo.codewordsInGroup1 * 8);
+    for (let i = 0; i < eccInfo.blocksInGroup2; i++) {
+      const bitStr = bits.substr(i * eccInfo.codewordsInGroup2 * 8, eccInfo.codewordsInGroup2 * 8);
+      const bitBlockList = this.binaryStringToBitBlocks(bitStr);
+      const bitBlockListDec = this.binaryStringsToDecimals(bitBlockList);
+      const eccWordList = this.calculateECCWords(bitStr, eccInfo);
+      const eccWordListDec = this.binaryStringsToDecimals(eccWordList);
+      codewordWithECC.push({
+        group: 2,
+        block: i + 1,
+        bits: bitStr,
+        codewords: bitBlockList,
+        eccWords: eccWordList,
+        codewordsInt: bitBlockListDec,
+        eccWordsInt: eccWordListDec
+      });
+    }
 
+    // TODO
+    
     // interleave code words
 
     // place interleaved data on module matrix
+  }
+
+ private calculateECCWords(bits: string, ecc: ECCInfo): string[] {
+    const eccWords = ecc.eccPerBlock;
+    const messagePolynom = PolynomUtils.calculateMessagePolynom(bits);
+    const generatorPolynom = PolynomUtils.calculateGeneratorPolynom(eccWords);
+
+    for (let i = 0; i < messagePolynom.polyItems.length; i++) {
+      messagePolynom.polyItems[i] = {
+        coefficient: messagePolynom.polyItems[i].coefficient,
+        exponent: messagePolynom.polyItems[i].exponent + eccWords
+      };
+    }
+
+    for (let i = 0; i < generatorPolynom.polyItems.length; i++) {
+      generatorPolynom.polyItems[i] = {
+        coefficient: generatorPolynom.polyItems[i].coefficient,
+        exponent: generatorPolynom.polyItems[i].exponent + (messagePolynom.polyItems.length - 1)
+      };
+    }
+    
+    let leadTermSource = messagePolynom;
+    for (let i = 0; (leadTermSource.polyItems.length > 0 && leadTermSource.polyItems[leadTermSource.polyItems.length - 1].exponent > 0); i++) {
+      if (leadTermSource.polyItems[0].coefficient === 0) {   
+        leadTermSource.polyItems.splice(0, 1);
+        leadTermSource.polyItems.push({
+          coefficient: 0,
+          exponent: leadTermSource.polyItems[leadTermSource.polyItems.length - 1].exponent - 1
+        });
+      } else {
+        let resPoly = PolynomUtils.multiplyGeneratorPolynomByLeadterm(
+          generatorPolynom,
+          PolynomUtils.convertToAlphaNotation(leadTermSource).polyItems[0], i
+        );
+        resPoly = PolynomUtils.convertToDecNotation(resPoly);
+        resPoly = PolynomUtils.XORPolynoms(leadTermSource, resPoly);
+        leadTermSource = resPoly;
+      }
+    }
+    return leadTermSource.polyItems.map(p => dtb(p.coefficient, 8));
   }
 
   private getVersion(length: number, encoding: EncodingMode, ecc: ECCLevel) {
@@ -254,15 +263,15 @@ export class QArr {
     let codeText = '';
     while (text.length >= 3) {
       const dec = +(text.substr(0, 3));
-      codeText += this.dtb(dec, 10);
+      codeText += dtb(dec, 10);
       text = text.substr(3);
     }
     if (text.length === 2) {
       const dec = parseInt(text.substr(0, text.length));
-      codeText += this.dtb(dec, 7);
+      codeText += dtb(dec, 7);
     } else if (text.length === 1) {
       const dec = parseInt(text.substr(0, text.length));
-      codeText += this.dtb(dec, 4);
+      codeText += dtb(dec, 4);
     }
     return codeText;
   }
@@ -275,11 +284,11 @@ export class QArr {
         const v1 = tmp.indexOf(token[0]);
         const v2 = tmp.indexOf(token[1]);
         const dec = v1 * 45 + v2;
-        codeText += this.dtb(dec, 11);
+        codeText += dtb(dec, 11);
         text = text.substr(2);
       }
       if (text.length > 0) {
-        codeText += this.dtb(tmp.indexOf(text[0]), 6);
+        codeText += dtb(tmp.indexOf(text[0]), 6);
       }
       return codeText;
   }
@@ -290,22 +299,10 @@ export class QArr {
 
     for (let index = 0; index < codeBytes.length; index++) {
       const codeByte = codeBytes[index];
-      codeText += this.dtb(codeByte, 8);
+      codeText += dtb(codeByte, 8);
     }
 
     return codeText;
-  }
-  
-  private btd(binary: string) {
-    return parseInt(binary, 2);
-  }
-
-  private dtb(decimal: number, padleft?: number) {
-    let binary = decimal.toString(2)
-    if (padleft !== undefined && padleft !== null && padleft >= 0) {
-       binary = Array.from({ length: padleft }, (v, k) => '0').join().concat(binary);
-    }
-    return binary;
   }
 
   private toByteArray(str) {
@@ -339,7 +336,7 @@ export class QArr {
   }
 
   private binaryStringsToDecimals(binaryStrings: string[]): number[] {
-    return binaryStrings.map(b => this.btd(b));
+    return binaryStrings.map(b => btd(b));
   }
 
   private getCountIndicatorLength(version: number, encoding: EncodingMode) {
