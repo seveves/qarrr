@@ -29,3 +29,29 @@ export function groupBy<T>(arr: T[], key: string): {[key: string]: T[]} {
     return p;
   }, {} as {[key: string]: T[]});
 };
+
+export function trimStart(str: string, char: string): string {
+  let start = 0;
+  while (str[start] === char) {
+    start++;
+  }
+  return str.substr(start);
+}
+
+export function padRight(str: string, char: string, length: number): string {
+  return str + Array.from({ length }, (k, v) => char).join();
+}
+
+export function padLeft(str: string, char: string, length: number): string {
+  return Array.from({ length }, (k, v) => char).join() + str;
+}
+
+export function btb(b: boolean): number {
+  return b === true ? 1 : 0;
+}
+
+export function bxor(b1: boolean, b2: boolean): boolean {
+  const bn1 = btb(b1);
+  const bn2 = btb(b2);
+  return (bn1 ^ bn2) === 1;
+}

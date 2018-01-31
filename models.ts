@@ -30,3 +30,10 @@ export interface CodewordBlock {
   eccWords: string[];
   eccWordsInt: number[];
 }
+
+export interface Rectangle {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
