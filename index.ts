@@ -190,10 +190,10 @@ export class QArr {
     const codewordWithECC: CodewordBlock[] = [];
     for (let i = 0; i < eccInfo.blocksInGroup1; i++) {
       const bitStr = bits.substr(i * eccInfo.codewordsInGroup1 * 8, eccInfo.codewordsInGroup1 * 8);
-      var bitBlockList = this.btbbl(bitStr);
-      var bitBlockListDec = this.BinaryStringListToDecList(bitBlockList);
-      var eccWordList = this.CalculateECCWords(bitStr, eccInfo);
-      var eccWordListDec = this.BinaryStringListToDecList(eccWordList);
+      const bitBlockList = this.binaryStringToBitBlocks(bitStr);
+      const bitBlockListDec = this.binaryStringsToDecimals(bitBlockList);
+      const eccWordList = this.CalculateECCWords(bitStr, eccInfo);
+      const eccWordListDec = this.binaryStringsToDecimals(eccWordList);
       codewordWithECC.push({
         group: 1,
         block: i + 1,
@@ -334,12 +334,12 @@ export class QArr {
     return bytes;
   }
 
-  private btbbl(bits: string) {
+  private binaryStringToBitBlocks(bits: string): string[] {
     return chunks(Array.from(bits), 8).reduce((p, c) => [ ...p, c.join() ], []);
   }
 
-  private List<int> BinaryStringListToDecList(List<string> binaryStringList) {
-      return binaryStringList.Select(binaryString => this.BinToDec(binaryString)).ToList();
+  private binaryStringsToDecimals(binaryStrings: string[]): number[] {
+    return binaryStrings.map(b => this.btd(b));
   }
 
   private getCountIndicatorLength(version: number, encoding: EncodingMode) {
