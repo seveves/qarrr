@@ -1,0 +1,36 @@
+{
+  "name": "qarrr",
+  "version": "0.1.0",
+  "description": "black flags, white skulls and rattlin zones",
+  "main": "dist/qarrr.js",
+  "types": "dist/qarrr.d.ts",
+  "umd:main": "dist/qarrr.min.js",
+  "module": "dist/qarrr.es.js",
+  "scripts": {
+    "clean": "rimraf dist",
+    "build": "rollup -c"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seveves/qarrr.git"
+  },
+  "keywords": [
+    "qr",
+    "qrcode"
+  ],
+  "author": "seveves",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/seveves/qarrr/issues"
+  },
+  "homepage": "https://github.com/seveves/qarrr#readme",
+  "devDependencies": {
+    "rimraf": "^2.6.2",
+    "rollup": "^0.55.3",
+    "rollup-plugin-typescript2": "^0.10.0",
+    "rollup-plugin-uglify": "^3.0.0",
+    "tslint": "^5.9.1",
+    "tsutils": "^2.20.0",
+    "typescript": "^2.7.1"
+  }
+}
