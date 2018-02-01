@@ -37,3 +37,13 @@ export interface Rectangle {
   width: number;
   height: number;
 }
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface AlignmentPattern {
+  version: number;
+  patternPositions: Point[];
+}

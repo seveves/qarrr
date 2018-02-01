@@ -1,4 +1,4 @@
-import { QRCodeData } from "./models";
+import { QRCode } from './qrcode';
 
 export const Patterns = {
   pattern1: (x: number, y: number) => ((x + y) % 2 === 0),
@@ -11,7 +11,7 @@ export const Patterns = {
   pattern8: (x: number, y: number) => ((((x + y) % 2) + ((x * y) % 3)) % 2 === 0),
 }
 
-export function score(qrCode: QRCodeData) {
+export function score(qrCode: QRCode) {
   let score1 = 0, score2 = 0, score3 = 0, score4 = 0;
   const length = qrCode.moduleMatrix.length;
 

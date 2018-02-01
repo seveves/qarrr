@@ -1,6 +1,6 @@
 import { QRCode } from './qrcode';
 import { ECCLevel } from './enums';
-import { Rectangle } from './models';
+import { Rectangle, Point } from './models';
 import * as utils from './utils';
 import * as Format from './format';
 import * as BitArray from './bit-array';
@@ -74,8 +74,8 @@ export function maskCode(qrCode: QRCode, version: number, blockedModules: any[],
     if (MaskPattern.Patterns.hasOwnProperty(pName)) {
       const pattern = MaskPattern.Patterns[pName];
       const qrTemp = new QRCode(version);
-      for (let y = 0; y < size; y++) {
-        for (let x = 0; x < size; x++) {
+      for (let y = 0; y < length; y++) {
+        for (let x = 0; x < length; x++) {
           qrTemp.moduleMatrix[y][x] = qrCode.moduleMatrix[y][x];
         }
       }
@@ -87,8 +87,8 @@ export function maskCode(qrCode: QRCode, version: number, blockedModules: any[],
         placeVersion(qrTemp, versionString);
       }
 
-      for (let x = 0; x < size; x++) {
-        for (let y = 0; y < size; y++) {
+      for (let x = 0; x < length; x++) {
+        for (let y = 0; y < length; y++) {
           if (!isBlocked({ x, y, width: 1,  height: 1 } as Rectangle, blockedModules)) {
             qrTemp.moduleMatrix[y][x] = utils.bxor(qrTemp.moduleMatrix[y][x], pattern(x, y));
           }
@@ -104,8 +104,8 @@ export function maskCode(qrCode: QRCode, version: number, blockedModules: any[],
   }
 
   const patternMethod = MaskPattern.Patterns[patternName];
-  for (let x = 0; x < size; x++) {
-    for (let y = 0; y < size; y++) {
+  for (let x = 0; x < length; x++) {
+    for (let y = 0; y < length; y++) {
       if (!isBlocked({ x, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
         qrCode.moduleMatrix[y][x] = utils.bxor(qrCode.moduleMatrix[y][x], patternMethod(x, y));
       }
@@ -132,154 +132,125 @@ export function intersects(r1: Rectangle, r2: Rectangle): boolean {
          r1.y < r2.y + r2.height;
 }
 
-
-            public static void PlaceDataWords(ref QRCodeData qrCode, string data, ref List<Rectangle> blockedModules)
-            {
-                var size = qrCode.ModuleMatrix.Count;
-                var up = true;
-                var datawords = new Queue<bool>();
-                for (int i = 0; i< data.Length; i++)
-                {
-                    datawords.Enqueue(data[i] != '0');
-                }
-                for (var x = size - 1; x >= 0; x = x - 2)
-                {
-                    if (x == 6)
-                        x = 5;
-                    for (var yMod = 1; yMod <= size; yMod++)
-                    {
-                        int y;
-                        if (up)
-                        {
-                            y = size - yMod;
-                            if (datawords.Count > 0 && !IsBlocked(new Rectangle(x, y, 1, 1), blockedModules))
-                                qrCode.ModuleMatrix[y][x] = datawords.Dequeue();
-                            if (datawords.Count > 0 && x > 0 && !IsBlocked(new Rectangle(x - 1, y, 1, 1), blockedModules))
-                                qrCode.ModuleMatrix[y][x - 1] = datawords.Dequeue();
-                        }
-                        else
-                        {
-                            y = yMod - 1;
-                            if (datawords.Count > 0 && !IsBlocked(new Rectangle(x, y, 1, 1), blockedModules))
-                                qrCode.ModuleMatrix[y][x] = datawords.Dequeue();
-                            if (datawords.Count > 0 && x > 0 && !IsBlocked(new Rectangle(x - 1, y, 1, 1), blockedModules))
-                                qrCode.ModuleMatrix[y][x - 1] = datawords.Dequeue();
-                        }
-                    }
-                    up = !up;
-                }
-            }
-
-            public static void ReserveSeperatorAreas(int size, ref List<Rectangle> blockedModules)
-            {
-                blockedModules.AddRange(new[]{
-                    new Rectangle(7, 0, 1, 8),
-                    new Rectangle(0, 7, 7, 1),
-                    new Rectangle(0, size-8, 8, 1),
-                    new Rectangle(7, size-7, 1, 7),
-                    new Rectangle(size-8, 0, 1, 8),
-                    new Rectangle(size-7, 7, 7, 1)
-                });
-            }
-
-            public static void ReserveVersionAreas(int size, int version, ref List<Rectangle> blockedModules)
-            {
-                blockedModules.AddRange(new[]{
-                    new Rectangle(8, 0, 1, 6),
-                    new Rectangle(8, 7, 1, 1),
-                    new Rectangle(0, 8, 6, 1),
-                    new Rectangle(7, 8, 2, 1),
-                    new Rectangle(size-8, 8, 8, 1),
-                    new Rectangle(8, size-7, 1, 7)
-                });
-
-                if (version >= 7)
-                {
-                    blockedModules.AddRange(new[]{
-                    new Rectangle(size-11, 0, 3, 6),
-                    new Rectangle(0, size-11, 6, 3)
-                });
-                }
-            }
-            public static void PlaceDarkModule(ref QRCodeData qrCode, int version, ref List<Rectangle> blockedModules)
-            {
-                qrCode.ModuleMatrix[4 * version + 9][8] = true;
-                blockedModules.Add(new Rectangle(8, 4 * version + 9, 1, 1));
-            }
-
-            public static void PlaceFinderPatterns(ref QRCodeData qrCode, ref List<Rectangle> blockedModules)
-            {
-                var size = qrCode.ModuleMatrix.Count;
-                int[] locations = { 0, 0, size - 7, 0, 0, size - 7 };
-
-                for (var i = 0; i < 6; i = i + 2)
-                {
-                    for (var x = 0; x < 7; x++)
-                    {
-                        for (var y = 0; y < 7; y++)
-                        {
-                            if (!(((x == 1 || x == 5) && y > 0 && y < 6) || (x > 0 && x < 6 && (y == 1 || y == 5))))
-                            {
-                                qrCode.ModuleMatrix[y + locations[i + 1]][x + locations[i]] = true;
-                            }
-                        }
-                    }
-                    blockedModules.Add(new Rectangle(locations[i], locations[i + 1], 7, 7));
-                }
-            }
-
-            public static void PlaceAlignmentPatterns(ref QRCodeData qrCode, List<Point> alignmentPatternLocations, ref List<Rectangle> blockedModules)
-            {
-                foreach (var loc in alignmentPatternLocations)
-                {
-                    var alignmentPatternRect = new Rectangle(loc.X, loc.Y, 5, 5);
-                    var blocked = false;
-                    foreach (var blockedRect in blockedModules)
-                    {
-                        if (Intersects(alignmentPatternRect, blockedRect))
-                        {
-                            blocked = true;
-                            break;
-                        }
-                    }
-                    if (blocked)
-                        continue;
-
-                    for (var x = 0; x < 5; x++)
-                    {
-                        for (var y = 0; y < 5; y++)
-                        {
-                            if (y == 0 || y == 4 || x == 0 || x == 4 || (x == 2 && y == 2))
-                            {
-                                qrCode.ModuleMatrix[loc.Y + y][loc.X + x] = true;
-                            }
-                        }
-                    }
-                    blockedModules.Add(new Rectangle(loc.X, loc.Y, 5, 5));
-                }
-            }
-
-            public static void PlaceTimingPatterns(ref QRCodeData qrCode, ref List<Rectangle> blockedModules)
-            {
-                var size = qrCode.ModuleMatrix.Count;
-                for (var i = 8; i < size - 8; i++)
-                {
-                    if (i % 2 == 0)
-                    {
-                        qrCode.ModuleMatrix[6][i] = true;
-                        qrCode.ModuleMatrix[i][6] = true;
-                    }
-                }
-                blockedModules.AddRange(new[]{
-                    new Rectangle(6, 8, 1, size-16),
-                    new Rectangle(8, 6, size-16, 1)
-                });
-            }
-
-            
-
-            
-
-
-
+export function placeDataWords(qrCode: QRCode, data: string, blockedModules: Rectangle[]): void {
+  const length = qrCode.moduleMatrix.length;
+  let up = true;
+  const datawords: boolean[] = [];
+  for (let i = 0; i< data.length; i++) {
+      datawords.push(data[i] !== '0');
+  }
+  for (let x = length - 1; x >= 0; x = x - 2) {
+    if (x == 6) {
+        x = 5;
+    }
+    for (let yMod = 1; yMod <= length; yMod++) {
+      let y: number;
+      if (up) {
+        y = length - yMod;
+        if (datawords.length > 0 && !isBlocked({ x, y, width: 1,  height: 1 } as Rectangle, blockedModules)) {
+          qrCode.moduleMatrix[y][x] = datawords.pop();
         }
+        if (datawords.length > 0 && x > 0 && !isBlocked({ x: x - 1, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
+          qrCode.moduleMatrix[y][x - 1] = datawords.pop();
+        }
+      } else {
+        y = yMod - 1;
+        if (datawords.length > 0 && !isBlocked({ x, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
+          qrCode.moduleMatrix[y][x] = datawords.pop();
+        }
+        if (datawords.length > 0 && x > 0 && !isBlocked({ x: x - 1, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
+          qrCode.moduleMatrix[y][x - 1] = datawords.pop();
+        }
+      }
+    }
+    up = !up;
+  }
+}
+
+export function reserveSeperatorAreas(length: number, blockedModules: Rectangle[]): void {
+  blockedModules.push(
+    { x: 7, y: 0, width: 1, height: 8 },
+    { x: 0, y: 7, width: 7, height: 1 },
+    { x: 0, y: length - 8, width: 8, height: 1 },
+    { x: 7, y: length - 7, width: 1, height: 7 },
+    { x: length - 8, y: 0, width: 1, height: 8 },
+    { x: length - 7, y: 7, width: 7, height: 1 }
+  );
+}
+
+export function reserveVersionAreas(length: number, version: number, blockedModules: Rectangle[]): void {
+  blockedModules.push(
+    { x: 8, y: 0, width: 1, height: 6 },
+    { x: 8, y: 7, width: 1, height: 1 },
+    { x: 0, y: 8, width: 6, height: 1 },
+    { x: 7, y: 8, width: 2, height: 1 },
+    { x: length - 8, y: 8, width: 8, height: 1 },
+    { x: 8, y: length - 7, width: 1, height: 7 }
+  );
+
+  if (version >= 7) {
+    blockedModules.push(
+      { x: length - 11, y: 0, width: 3, height: 6 },
+      { x: 0, y: length - 11, width: 6, height: 3 },
+    );
+  }
+}
+
+export function placeDarkModule(qrCode: QRCode, version: number, blockedModules: Rectangle[]): void {
+  qrCode.moduleMatrix[4 * version + 9][8] = true;
+  blockedModules.push({ x: 8, y: 4 * version + 9, width: 1, height: 1 });
+}
+
+export function placeFinderPatterns(qrCode: QRCode, blockedModules: Rectangle[]): void {
+  const length = qrCode.moduleMatrix.length;
+  const locations = [ 0, 0, length - 7, 0, 0, length - 7 ];
+
+  for (let i = 0; i < 6; i = i + 2) {
+    for (let x = 0; x < 7; x++) {
+      for (let y = 0; y < 7; y++) {
+        if (!(((x === 1 || x === 5) && y > 0 && y < 6) || (x > 0 && x < 6 && (y === 1 || y === 5)))) {
+          qrCode.moduleMatrix[y + locations[i + 1]][x + locations[i]] = true;
+        }
+      }
+    }
+    blockedModules.push({ x: locations[i], y: locations[i + 1], width: 7, height: 7 });
+  }
+}
+
+export function placeAlignmentPatterns(qrCode: QRCode, alignmentPatternLocations: Point[], blockedModules: Rectangle[]) {
+  alignmentPatternLocations.forEach(loc => {
+    const alignmentPatternRect: Rectangle = { x: loc.x, y: loc.y, width: 5, height: 5 };
+    let blocked = false;
+    blockedModules.some(blockedRect => {
+      if (intersects(alignmentPatternRect, blockedRect)) {
+        blocked = true;
+        return true;
+      }
+      return false;
+    });
+    if (!blocked) {
+      for (let x = 0; x < 5; x++) {
+        for (let y = 0; y < 5; y++) {
+          if (y === 0 || y === 4 || x === 0 || x === 4 || (x === 2 && y === 2)) {
+            qrCode.moduleMatrix[loc.y + y][loc.x + x] = true;
+          }
+        }
+      }
+      blockedModules.push({ x: loc.x, y: loc.y, width: 5, height: 5 });
+    }
+  });
+}
+
+export function placeTimingPatterns(qrCode: QRCode, blockedModules: Rectangle[]): void {
+  const lenght = qrCode.moduleMatrix.length;
+  for (let i = 8; i < lenght - 8; i++) {
+    if (i % 2 === 0){
+      qrCode.moduleMatrix[6][i] = true;
+      qrCode.moduleMatrix[i][6] = true;
+    }
+  }
+  blockedModules.push(
+    { x: 6, y: 8, width: 1, height: length - 16 },
+    { x: 8, y: 6, width: length - 16, height: 1 }
+  );
+}
