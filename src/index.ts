@@ -5,9 +5,10 @@ import { chunks, min, btd, dtb } from './utils';
 import * as PolynomUtils from './polynom';
 import * as ModulePlacer from './module-placer';
 import * as Format from './format';
+import { Color } from './color';
 
-const nums = Array.from({ length: 10 }, (v, k) => ''+k);
-const abcz = Array.from({ length: 26 }, (v, k) => String.fromCharCode(65 + k));
+const nums = Array.from({ length: 10 }, (k, v) => ''+v);
+const abcz = Array.from({ length: 26 }, (k, v) => String.fromCharCode(65 + v));
 const spcl = [ ' ', '$', '%', '*', '+', '-', '.', '/', ':' ];
 const numTable = new Set(nums);
 const alphanumEncTable = new Set([ ...nums, ...abcz, ...spcl ]);
@@ -137,8 +138,17 @@ const capacityTable = createCapacityTable();
 const capacityECCTable = createCapacityECCTable();
 const alignmentPatternTable = createAlignmentPatternTable();
 
+export interface QArrOptions {
+  ecc?: ECCLevel;
+  pixelsPerModule?: number;
+  darkColor?: Color;
+  lightColor?: Color;
+  drawQuietZones?: boolean;
+}
+
 export class QArr {
-  public create(text: string, ecc: ECCLevel): QRCode {
+  public create(text: string, options?: QArrOptions): HTMLCanvasElement {
+    const ecc = options && options.ecc ? options.ecc : ECCLevel.H;
     const encoding = this.getEncoding(text);
     const coded = this.textToBinary(text, encoding);
     const version = this.getVersion(text.length, encoding, ecc);
@@ -217,7 +227,6 @@ export class QArr {
     }
     interleavedData += Array.from({ length: remainderBits[version - 1] }, (k, v) => '0').join();
 
-    // TODO
     // place interleaved data on module matrix
     const qrCode = new QRCode(version);
     const blockedModules: Rectangle[] = [];
@@ -236,7 +245,18 @@ export class QArr {
       ModulePlacer.placeVersion(qrCode, versionString);
     }
     ModulePlacer.addQuietZone(qrCode);
-    return qrCode;
+
+    let pixelsPerModule = 4;
+    let darkColor = { r: 0, g: 0, b: 0 } as Color;
+    let lightColor = { r: 0, g: 0, b: 0 } as Color;
+    let drawQuietZones = true;
+    if (options) {
+      pixelsPerModule = options.pixelsPerModule || pixelsPerModule;
+      darkColor = options.darkColor || darkColor;
+      lightColor = options.lightColor || lightColor;
+      drawQuietZones = options.drawQuietZones || drawQuietZones;
+    }
+    return qrCode.getGraphic(pixelsPerModule, darkColor, lightColor, drawQuietZones);
   }
 
   private calculateECCWords(bits: string, ecc: ECCInfo): string[] {
