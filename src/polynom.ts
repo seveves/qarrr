@@ -31,7 +31,7 @@ export function calculateGeneratorPolynom(numEccWords: number): Polynom {
     const multiplierPolynom: Polynom = { polyItems: [] };
     multiplierPolynom.polyItems.push(
       { coefficient: 0, exponent: 1 },
-      { coefficient: i, exponent: 1 },
+      { coefficient: i, exponent: 0 },
     );
     generatorPolynom = multiplyAlphaPolynoms(generatorPolynom, multiplierPolynom);
   }

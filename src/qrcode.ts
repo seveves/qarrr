@@ -1,9 +1,12 @@
 import * as BitArray from './bit-array';
 import { Color, colorToString } from './color';
 
-export interface QRCode<T> {
+export interface QRCodeData {
   moduleMatrix: boolean[][];
   version: number;
+}
+
+export interface QRCode<T> extends QRCodeData {
   getGraphic: (pixelsPerModule: number, darkColor: Color, lightColor: Color, drawQuietZones: boolean) => T;
 }
 

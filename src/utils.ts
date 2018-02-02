@@ -17,7 +17,7 @@ export function btd(binary: string): number {
 export function dtb(decimal: number, padleft?: number): string {
   let binary = decimal.toString(2);
   if (padleft !== undefined && padleft !== null && padleft >= 0) {
-    binary = Array.from({ length: padleft }, (v, k) => '0').join().concat(binary);
+    binary = padLeft(binary, '0', padleft);
   }
   return binary;
 }
@@ -41,11 +41,19 @@ export function trimStart(str: string, char: string): string {
 }
 
 export function padRight(str: string, char: string, length: number): string {
-  return str + Array.from({ length }, (k, v) => char).join();
+  if (str.length < length) {
+    const padLength = length - str.length;
+    return str + Array.from({ length: padLength }, (k, v) => char).join('');
+  }
+  return str;
 }
 
 export function padLeft(str: string, char: string, length: number): string {
-  return Array.from({ length }, (k, v) => char).join() + str;
+  if (str.length < length) {
+    const padLength = length - str.length;
+    return Array.from({ length: padLength }, (k, v) => char).join('') + str;
+  }
+  return str;
 }
 
 export function btb(b: boolean): number {

@@ -28,7 +28,8 @@ export class QArr {
     const coded = this.textToBinary(text, encoding);
     const version = this.getVersion(text.length, encoding, ecc);
     const modeIndicator = Utils.dtb(encoding, 4);
-    const countIndicator = Utils.dtb(text.length, this.getCountIndicatorLength(version, encoding));
+    const countIndicatorLength = this.getCountIndicatorLength(version, encoding);
+    const countIndicator = Utils.dtb(text.length, countIndicatorLength);
     let bits = modeIndicator + countIndicator + coded;
 
     // filling up data code word
@@ -36,10 +37,10 @@ export class QArr {
     const dataLength = eccInfo.totalDataCodewords * 8;
     const lengthDiff = dataLength - bits.length;
     if (lengthDiff > 0) {
-      bits += Array.from({ length: Math.min(lengthDiff, 4) }, (k, v) => '0').join();
+      bits += Array.from({ length: Math.min(lengthDiff, 4) }, (k, v) => '0').join('');
     }
     if ((bits.length % 8) !== 0) {
-      bits += Array.from({ length: 8 - (bits.length % 8) }, (k, v) => '0').join();
+      bits += Array.from({ length: 8 - (bits.length % 8) }, (k, v) => '0').join('');
     }
     while (bits.length < dataLength) {
       bits += '1110110000010001';
@@ -100,7 +101,7 @@ export class QArr {
         }
       });
     }
-    interleavedData += Array.from({ length: Const.REMAINDER_BITS[version - 1] }, (k, v) => '0').join();
+    interleavedData += Array.from({ length: Const.REMAINDER_BITS[version - 1] }, (k, v) => '0').join('');
 
     // place interleaved data on module matrix
     const qrCode = factory(version);
@@ -289,7 +290,7 @@ export class QArr {
   }
 
   private binaryStringToBitBlocks(bits: string): string[] {
-    return Utils.chunks(Array.from(bits), 8).reduce((p, c) => [...p, c.join()], []);
+    return Utils.chunks(Array.from(bits), 8).reduce((p, c) => [...p, c.join('')], []);
   }
 
   private binaryStringsToDecimals(binaryStrings: string[]): number[] {

@@ -22,7 +22,7 @@ export function addQuietZone<T>(qrCode: QRCode<T>): void {
 }
 
 export function reverseString(str: string): string {
-  return str.split('').reverse().join();
+  return str.split('').reverse().join('');
 }
 
 export function placeVersion<T>(qrCode: QRCode<T>, versionStr: string): void {
@@ -90,7 +90,9 @@ export function maskCode<T>(qrCode: QRCode<T>, factory: (version: number) => QRC
       for (let x = 0; x < length; x++) {
         for (let y = 0; y < length; y++) {
           if (!isBlocked({ x, y, width: 1,  height: 1 } as Rectangle, blockedModules)) {
-            qrTemp.moduleMatrix[y][x] = utils.bxor(qrTemp.moduleMatrix[y][x], pattern(x, y));
+            const bPattern: boolean = pattern(x, y);
+            const mPattern = qrTemp.moduleMatrix[y][x];
+            qrTemp.moduleMatrix[y][x] = utils.bxor(mPattern, bPattern);
           }
         }
       }
@@ -242,8 +244,8 @@ export function placeAlignmentPatterns<T>(qrCode: QRCode<T>, alignmentPatternLoc
 }
 
 export function placeTimingPatterns<T>(qrCode: QRCode<T>, blockedModules: Rectangle[]): void {
-  const lenght = qrCode.moduleMatrix.length;
-  for (let i = 8; i < lenght - 8; i++) {
+  const length = qrCode.moduleMatrix.length;
+  for (let i = 8; i < length - 8; i++) {
     if (i % 2 === 0) {
       qrCode.moduleMatrix[6][i] = true;
       qrCode.moduleMatrix[i][6] = true;
