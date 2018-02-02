@@ -6,10 +6,10 @@ import * as Format from './format';
 import * as BitArray from './bit-array';
 import * as MaskPattern from './mask-pattern';
 
-export function addQuietZone(qrCode: QRCode): void {
+export function addQuietZone<T>(qrCode: QRCode<T>): void {
   const quietLine = BitArray.init(qrCode.moduleMatrix.length + 8);
   for (let i = 0; i < 4; i++) {
-    qrCode.moduleMatrix = [ quietLine, ...qrCode.moduleMatrix ];
+    qrCode.moduleMatrix = [quietLine, ...qrCode.moduleMatrix];
   }
   for (let i = 0; i < 4; i++) {
     qrCode.moduleMatrix.push(quietLine);
@@ -25,7 +25,7 @@ export function reverseString(str: string): string {
   return str.split('').reverse().join();
 }
 
-export function placeVersion(qrCode: QRCode, versionStr: string): void {
+export function placeVersion<T>(qrCode: QRCode<T>, versionStr: string): void {
   const length = qrCode.moduleMatrix.length;
   const vStr = reverseString(versionStr);
   for (let i = 0; i < 6; i++) {
@@ -36,25 +36,25 @@ export function placeVersion(qrCode: QRCode, versionStr: string): void {
   }
 }
 
-export function placeFormat(qrCode: QRCode, formatStr: string): void {
+export function placeFormat<T>(qrCode: QRCode<T>, formatStr: string): void {
   const length = qrCode.moduleMatrix.length;
   const fStr = reverseString(formatStr);
   const modules = [
-    [ 8, 0, length - 1, 8 ],
-    [ 8, 1, length - 2, 8 ],
-    [ 8, 2, length - 3, 8 ],
-    [ 8, 3, length - 4, 8 ],
-    [ 8, 4, length - 5, 8 ],
-    [ 8, 5, length - 6, 8 ],
-    [ 8, 7, length - 7, 8 ],
-    [ 8, 8, length - 8, 8 ],
-    [ 7, 8, 8, length - 7 ],
-    [ 5, 8, 8, length - 6 ],
-    [ 4, 8, 8, length - 5 ],
-    [ 3, 8, 8, length - 4 ],
-    [ 2, 8, 8, length - 3 ],
-    [ 1, 8, 8, length - 2 ],
-    [ 0, 8, 8, length - 1 ]
+    [8, 0, length - 1, 8],
+    [8, 1, length - 2, 8],
+    [8, 2, length - 3, 8],
+    [8, 3, length - 4, 8],
+    [8, 4, length - 5, 8],
+    [8, 5, length - 6, 8],
+    [8, 7, length - 7, 8],
+    [8, 8, length - 8, 8],
+    [7, 8, 8, length - 7],
+    [5, 8, 8, length - 6],
+    [4, 8, 8, length - 5],
+    [3, 8, 8, length - 4],
+    [2, 8, 8, length - 3],
+    [1, 8, 8, length - 2],
+    [0, 8, 8, length - 1],
   ];
     
   for (let i = 0; i < 15; i++) {
@@ -65,15 +65,15 @@ export function placeFormat(qrCode: QRCode, formatStr: string): void {
   }
 }
 
-export function maskCode(qrCode: QRCode, version: number, blockedModules: any[], ecc: ECCLevel) {
+export function maskCode<T>(qrCode: QRCode<T>, factory: (version: number) => QRCode<T>, version: number, blockedModules: any[], ecc: ECCLevel) {
   let patternName = '';
   let patternScore = 0;
   const length = qrCode.moduleMatrix.length;
 
-  for (const pName in MaskPattern.Patterns) {
-    if (MaskPattern.Patterns.hasOwnProperty(pName)) {
-      const pattern = MaskPattern.Patterns[pName];
-      const qrTemp = new QRCode(version);
+  for (const pName in MaskPattern.patterns) {
+    if (MaskPattern.patterns.hasOwnProperty(pName)) {
+      const pattern = MaskPattern.patterns[pName];
+      const qrTemp = factory(version);
       for (let y = 0; y < length; y++) {
         for (let x = 0; x < length; x++) {
           qrTemp.moduleMatrix[y][x] = qrCode.moduleMatrix[y][x];
@@ -103,7 +103,7 @@ export function maskCode(qrCode: QRCode, version: number, blockedModules: any[],
     }
   }
 
-  const patternMethod = MaskPattern.Patterns[patternName];
+  const patternMethod = MaskPattern.patterns[patternName];
   for (let x = 0; x < length; x++) {
     for (let y = 0; y < length; y++) {
       if (!isBlocked({ x, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
@@ -117,7 +117,7 @@ export function maskCode(qrCode: QRCode, version: number, blockedModules: any[],
 
 export function isBlocked(r1: Rectangle, blockedModules: Rectangle[]): boolean {
   let isBlocked = false;
-  blockedModules.forEach(blockedMod => {
+  blockedModules.forEach((blockedMod) => {
     if (intersects(blockedMod, r1)) {
       isBlocked = true;
     }
@@ -132,16 +132,16 @@ export function intersects(r1: Rectangle, r2: Rectangle): boolean {
          r1.y < r2.y + r2.height;
 }
 
-export function placeDataWords(qrCode: QRCode, data: string, blockedModules: Rectangle[]): void {
+export function placeDataWords<T>(qrCode: QRCode<T>, data: string, blockedModules: Rectangle[]): void {
   const length = qrCode.moduleMatrix.length;
   let up = true;
   const datawords: boolean[] = [];
-  for (let i = 0; i< data.length; i++) {
-      datawords.push(data[i] !== '0');
+  for (let i = 0; i < data.length; i++) {
+    datawords.push(data[i] !== '0');
   }
   for (let x = length - 1; x >= 0; x = x - 2) {
-    if (x == 6) {
-        x = 5;
+    if (x === 6) {
+      x = 5;
     }
     for (let yMod = 1; yMod <= length; yMod++) {
       let y: number;
@@ -150,7 +150,7 @@ export function placeDataWords(qrCode: QRCode, data: string, blockedModules: Rec
         if (datawords.length > 0 && !isBlocked({ x, y, width: 1,  height: 1 } as Rectangle, blockedModules)) {
           qrCode.moduleMatrix[y][x] = datawords.pop();
         }
-        if (datawords.length > 0 && x > 0 && !isBlocked({ x: x - 1, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
+        if (datawords.length > 0 && x > 0 && !isBlocked({ y, x: x - 1, width: 1, height: 1 } as Rectangle, blockedModules)) {
           qrCode.moduleMatrix[y][x - 1] = datawords.pop();
         }
       } else {
@@ -158,7 +158,7 @@ export function placeDataWords(qrCode: QRCode, data: string, blockedModules: Rec
         if (datawords.length > 0 && !isBlocked({ x, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
           qrCode.moduleMatrix[y][x] = datawords.pop();
         }
-        if (datawords.length > 0 && x > 0 && !isBlocked({ x: x - 1, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
+        if (datawords.length > 0 && x > 0 && !isBlocked({ y, x: x - 1, width: 1, height: 1 } as Rectangle, blockedModules)) {
           qrCode.moduleMatrix[y][x - 1] = datawords.pop();
         }
       }
@@ -174,7 +174,7 @@ export function reserveSeperatorAreas(length: number, blockedModules: Rectangle[
     { x: 0, y: length - 8, width: 8, height: 1 },
     { x: 7, y: length - 7, width: 1, height: 7 },
     { x: length - 8, y: 0, width: 1, height: 8 },
-    { x: length - 7, y: 7, width: 7, height: 1 }
+    { x: length - 7, y: 7, width: 7, height: 1 },
   );
 }
 
@@ -185,7 +185,7 @@ export function reserveVersionAreas(length: number, version: number, blockedModu
     { x: 0, y: 8, width: 6, height: 1 },
     { x: 7, y: 8, width: 2, height: 1 },
     { x: length - 8, y: 8, width: 8, height: 1 },
-    { x: 8, y: length - 7, width: 1, height: 7 }
+    { x: 8, y: length - 7, width: 1, height: 7 },
   );
 
   if (version >= 7) {
@@ -196,14 +196,14 @@ export function reserveVersionAreas(length: number, version: number, blockedModu
   }
 }
 
-export function placeDarkModule(qrCode: QRCode, version: number, blockedModules: Rectangle[]): void {
+export function placeDarkModule<T>(qrCode: QRCode<T>, version: number, blockedModules: Rectangle[]): void {
   qrCode.moduleMatrix[4 * version + 9][8] = true;
   blockedModules.push({ x: 8, y: 4 * version + 9, width: 1, height: 1 });
 }
 
-export function placeFinderPatterns(qrCode: QRCode, blockedModules: Rectangle[]): void {
+export function placeFinderPatterns<T>(qrCode: QRCode<T>, blockedModules: Rectangle[]): void {
   const length = qrCode.moduleMatrix.length;
-  const locations = [ 0, 0, length - 7, 0, 0, length - 7 ];
+  const locations = [0, 0, length - 7, 0, 0, length - 7];
 
   for (let i = 0; i < 6; i = i + 2) {
     for (let x = 0; x < 7; x++) {
@@ -217,11 +217,11 @@ export function placeFinderPatterns(qrCode: QRCode, blockedModules: Rectangle[])
   }
 }
 
-export function placeAlignmentPatterns(qrCode: QRCode, alignmentPatternLocations: Point[], blockedModules: Rectangle[]) {
-  alignmentPatternLocations.forEach(loc => {
+export function placeAlignmentPatterns<T>(qrCode: QRCode<T>, alignmentPatternLocations: Point[], blockedModules: Rectangle[]) {
+  alignmentPatternLocations.forEach((loc) => {
     const alignmentPatternRect: Rectangle = { x: loc.x, y: loc.y, width: 5, height: 5 };
     let blocked = false;
-    blockedModules.some(blockedRect => {
+    blockedModules.some((blockedRect) => {
       if (intersects(alignmentPatternRect, blockedRect)) {
         blocked = true;
         return true;
@@ -241,16 +241,16 @@ export function placeAlignmentPatterns(qrCode: QRCode, alignmentPatternLocations
   });
 }
 
-export function placeTimingPatterns(qrCode: QRCode, blockedModules: Rectangle[]): void {
+export function placeTimingPatterns<T>(qrCode: QRCode<T>, blockedModules: Rectangle[]): void {
   const lenght = qrCode.moduleMatrix.length;
   for (let i = 8; i < lenght - 8; i++) {
-    if (i % 2 === 0){
+    if (i % 2 === 0) {
       qrCode.moduleMatrix[6][i] = true;
       qrCode.moduleMatrix[i][6] = true;
     }
   }
   blockedModules.push(
     { x: 6, y: 8, width: 1, height: length - 16 },
-    { x: 8, y: 6, width: length - 16, height: 1 }
+    { x: 8, y: 6, width: length - 16, height: 1 },
   );
 }

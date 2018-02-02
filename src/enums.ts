@@ -5,5 +5,5 @@ export enum EncodingMode {
   Alphanumeric = 2,
   Byte = 4,
   Kanji = 8,
-  ECI = 7
+  ECI = 7,
 }

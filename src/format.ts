@@ -3,7 +3,7 @@ import * as utils from './utils';
 
 export function getFormatString(ecc: ECCLevel, maskVersion: number): string {
   let generator = '10100110111';
-  let fStrMask = '101010000010010';
+  const fStrMask = '101010000010010';
 
   let fStr = (ecc === ECCLevel.L)
     ? '01'
@@ -36,7 +36,7 @@ export function getVersionString(version: number): string {
   let generator = '1111100100101';
 
   let vStr = utils.dtb(version, 6);
-  let vStrEcc = utils.trimStart(utils.padRight(vStr, '0', 18), '0')
+  let vStrEcc = utils.trimStart(utils.padRight(vStr, '0', 18), '0');
   while (vStrEcc.length > 12) {
     let sb = '';
     generator = utils.padRight(generator, '0', vStrEcc.length);

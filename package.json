@@ -8,7 +8,9 @@
   "module": "dist/qarrr.es.js",
   "scripts": {
     "clean": "rimraf dist",
-    "build": "rollup -c"
+    "bundle": "rollup -c",
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
+    "build": "npm run clean && npm run lint && npm run bundle"
   },
   "repository": {
     "type": "git",
@@ -30,6 +32,7 @@
     "rollup-plugin-typescript2": "^0.10.0",
     "rollup-plugin-uglify": "^3.0.0",
     "tslint": "^5.9.1",
+    "tslint-config-airbnb": "^5.5.0",
     "tsutils": "^2.20.0",
     "typescript": "^2.7.1"
   }

@@ -1,6 +1,6 @@
 import { QRCode } from './qrcode';
 
-export const Patterns = {
+export const patterns = {
   pattern1: (x: number, y: number) => ((x + y) % 2 === 0),
   pattern2: (x: number, y: number) => (y % 2 === 0),
   pattern3: (x: number, y: number) => (x % 3 === 0),
@@ -9,19 +9,22 @@ export const Patterns = {
   pattern6: (x: number, y: number) => (((x * y) % 2) + ((x * y) % 3) === 0),
   pattern7: (x: number, y: number) => ((((x * y) % 2) + ((x * y) % 3)) % 2 === 0),
   pattern8: (x: number, y: number) => ((((x + y) % 2) + ((x * y) % 3)) % 2 === 0),
-}
+};
 
-export function score(qrCode: QRCode) {
-  let score1 = 0, score2 = 0, score3 = 0, score4 = 0;
+export function score<T>(qrCode: QRCode<T>) {
+  let score1 = 0;
+  let score2 = 0;
+  let score3 = 0;
+  let score4 = 0;
   const length = qrCode.moduleMatrix.length;
 
   // penalty 1                   
-  for (var y = 0; y < length; y++) {
+  for (let y = 0; y < length; y++) {
     let modInRow = 0;
     let modInColumn = 0;
     let lastValRow = qrCode.moduleMatrix[y][0];
     let lastValColumn = qrCode.moduleMatrix[0][y];
-    for (var x = 0; x < length; x++) {
+    for (let x = 0; x < length; x++) {
       if (qrCode.moduleMatrix[y][x] === lastValRow) {
         modInRow++;
       } else {
@@ -60,8 +63,8 @@ export function score(qrCode: QRCode) {
   }
 
         // penalty 3
-  for (var y = 0; y < length; y++) {
-    for (var x = 0; x < length - 10; x++) {
+  for (let y = 0; y < length; y++) {
+    for (let x = 0; x < length - 10; x++) {
       if ((qrCode.moduleMatrix[y][x] && !qrCode.moduleMatrix[y][x + 1] &&
            qrCode.moduleMatrix[y][x + 2] && qrCode.moduleMatrix[y][x + 3] &&
            qrCode.moduleMatrix[y][x + 4] && !qrCode.moduleMatrix[y][x + 5] &&
@@ -73,9 +76,8 @@ export function score(qrCode: QRCode) {
            qrCode.moduleMatrix[y][x + 4] && !qrCode.moduleMatrix[y][x + 5] &&
            qrCode.moduleMatrix[y][x + 6] && qrCode.moduleMatrix[y][x + 7] &&
            qrCode.moduleMatrix[y][x + 8] && !qrCode.moduleMatrix[y][x + 9] &&
-           qrCode.moduleMatrix[y][x + 10]))
-      {
-          score3 += 40;
+           qrCode.moduleMatrix[y][x + 10])) {
+        score3 += 40;
       }
 
       if ((qrCode.moduleMatrix[x][y] && !qrCode.moduleMatrix[x + 1][y] &&
@@ -89,21 +91,20 @@ export function score(qrCode: QRCode) {
            qrCode.moduleMatrix[x + 4][y] && !qrCode.moduleMatrix[x + 5][y] &&
            qrCode.moduleMatrix[x + 6][y] && qrCode.moduleMatrix[x + 7][y] &&
            qrCode.moduleMatrix[x + 8][y] && !qrCode.moduleMatrix[x + 9][y] &&
-           qrCode.moduleMatrix[x + 10][y]))
-      {
-          score3 += 40;
+           qrCode.moduleMatrix[x + 10][y])) {
+        score3 += 40;
       }
     }
   }
 
   // penalty 4
   let blackModules = 0;
-  qrCode.moduleMatrix.forEach(row => {
-    row.forEach(bit => {
+  qrCode.moduleMatrix.forEach((row) => {
+    row.forEach((bit) => {
       if (bit) {
         blackModules++;
       }
-    })
+    });
   });
   
   const percent = (blackModules / (qrCode.moduleMatrix.length * qrCode.moduleMatrix.length)) * 100;

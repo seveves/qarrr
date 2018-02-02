@@ -1,10 +1,18 @@
 import * as BitArray from './bit-array';
 import { Color, colorToString } from './color';
 
-export class QRCode {
+export interface QRCode<T> {
   moduleMatrix: boolean[][];
+  version: number;
+  getGraphic: (pixelsPerModule: number, darkColor: Color, lightColor: Color, drawQuietZones: boolean) => T;
+}
 
-  constructor(public version: number) {
+export class CanvasQRCode implements QRCode<HTMLCanvasElement> {
+  moduleMatrix: boolean[][];
+  version: number;
+
+  constructor(version: number) {
+    this.version = version;
     const modulesPerSide = 21 + (version - 1) * 4;
     this.moduleMatrix = [];
     for (let i = 0; i < modulesPerSide; i++) {
@@ -24,7 +32,7 @@ export class QRCode {
       const ctx = canvas.getContext('2d');
       for (let x = 0; x < size + offset; x = x + pixelsPerModule) {
         for (let y = 0; y < size + offset; y = y + pixelsPerModule) {
-          const m = this.moduleMatrix[(y + pixelsPerModule)/pixelsPerModule - 1][(x + pixelsPerModule)/pixelsPerModule - 1];
+          const m = this.moduleMatrix[(y + pixelsPerModule) / pixelsPerModule - 1][(x + pixelsPerModule) / pixelsPerModule - 1];
           if (m) {
             ctx.fillStyle = colorToString(darkColor);
             ctx.fillRect(x - offset, y - offset, pixelsPerModule, pixelsPerModule);

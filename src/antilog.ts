@@ -6,20 +6,20 @@ export interface Antilog {
 export const galoisField = createAntilogTable();
 
 function createAntilogTable() {
-  const galoisField: Antilog[] = [];
+  const gf: Antilog[] = [];
 
   for (let i = 0; i < 256; i++) {
     let gfItem = Math.pow(2, i) | 0;
 
     if (i > 7) {
-      gfItem = galoisField[i - 1].value * 2;
+      gfItem = gf[i - 1].value * 2;
     }
     if (gfItem > 255) {
       gfItem = gfItem ^ 285;
     }
 
-    galoisField.push({ exponentAlpha: i, value: gfItem });
+    gf.push({ exponentAlpha: i, value: gfItem });
   }
 
-  return galoisField;
+  return gf;
 }
