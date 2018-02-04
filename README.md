@@ -9,8 +9,8 @@ Ahoy! 'tis a library wit' naught dependencies that generates nasty QR codes in y
 ```javascript
 import qarrr from 'qarrr';
 
-var q = new qarrr.QArr();
-var qrcd = q.create('QArr!');
+var q = new qarrr.QArrr();
+var qrcd = q.create('QArrr!');
 var canvas = q.toCanvas(qrcd);
 document.body.appendChild(canvas);
 ```
