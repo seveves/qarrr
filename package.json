@@ -1,6 +1,6 @@
 {
   "name": "qarrr",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "black flags, white skulls and rattlin zones",
   "main": "dist/qarrr.js",
   "types": "dist/qarrr.d.ts",
