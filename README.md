@@ -1,8 +1,9 @@
 # qarrr
 > black flags, white skulls and rattlin zones
 
-Ahoy!
-'tis a library wit' naught dependencies that generates nasty QR codes in yer browser as a Canvas element. Ay!
+[![Build Status](https://travis-ci.org/seveves/qarrr.svg?branch=master)](https://travis-ci.org/seveves/qarrr)
+
+Ahoy! 'tis a library wit' naught dependencies that generates nasty QR codes in yer browser as a Canvas element. Ay!
 
 ## Example
 ```javascript
