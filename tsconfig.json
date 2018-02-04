@@ -11,5 +11,12 @@
     ],
     "downlevelIteration": true,
     "declaration": true
-  }
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "test/**/*"
+  ]
 }

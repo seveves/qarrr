@@ -6,7 +6,7 @@ import * as Format from './format';
 import * as BitArray from './bit-array';
 import * as MaskPattern from './mask-pattern';
 
-export function addQuietZone<T>(qrCode: QRCode<T>): void {
+export function addQuietZone(qrCode: QRCode): void {
   const quietLine = BitArray.init(qrCode.moduleMatrix.length + 8);
   for (let i = 0; i < 4; i++) {
     qrCode.moduleMatrix = [quietLine, ...qrCode.moduleMatrix];
@@ -25,7 +25,7 @@ export function reverseString(str: string): string {
   return str.split('').reverse().join('');
 }
 
-export function placeVersion<T>(qrCode: QRCode<T>, versionStr: string): void {
+export function placeVersion(qrCode: QRCode, versionStr: string): void {
   const length = qrCode.moduleMatrix.length;
   const vStr = reverseString(versionStr);
   for (let i = 0; i < 6; i++) {
@@ -36,7 +36,7 @@ export function placeVersion<T>(qrCode: QRCode<T>, versionStr: string): void {
   }
 }
 
-export function placeFormat<T>(qrCode: QRCode<T>, formatStr: string): void {
+export function placeFormat(qrCode: QRCode, formatStr: string): void {
   const length = qrCode.moduleMatrix.length;
   const fStr = reverseString(formatStr);
   const modules = [
@@ -65,7 +65,7 @@ export function placeFormat<T>(qrCode: QRCode<T>, formatStr: string): void {
   }
 }
 
-export function maskCode<T>(qrCode: QRCode<T>, factory: (version: number) => QRCode<T>, version: number, blockedModules: any[], ecc: ECCLevel) {
+export function maskCode<T>(qrCode: QRCode, version: number, blockedModules: any[], ecc: ECCLevel) {
   let patternName = '';
   let patternScore = 0;
   const length = qrCode.moduleMatrix.length;
@@ -73,7 +73,7 @@ export function maskCode<T>(qrCode: QRCode<T>, factory: (version: number) => QRC
   for (const pName in MaskPattern.patterns) {
     if (MaskPattern.patterns.hasOwnProperty(pName)) {
       const pattern = MaskPattern.patterns[pName];
-      const qrTemp = factory(version);
+      const qrTemp = new QRCode(version);
       for (let y = 0; y < length; y++) {
         for (let x = 0; x < length; x++) {
           qrTemp.moduleMatrix[y][x] = qrCode.moduleMatrix[y][x];
@@ -134,7 +134,7 @@ export function intersects(r1: Rectangle, r2: Rectangle): boolean {
          r1.y < r2.y + r2.height;
 }
 
-export function placeDataWords<T>(qrCode: QRCode<T>, data: string, blockedModules: Rectangle[]): void {
+export function placeDataWords(qrCode: QRCode, data: string, blockedModules: Rectangle[]): void {
   const length = qrCode.moduleMatrix.length;
   let up = true;
   const datawords: boolean[] = [];
@@ -198,12 +198,12 @@ export function reserveVersionAreas(length: number, version: number, blockedModu
   }
 }
 
-export function placeDarkModule<T>(qrCode: QRCode<T>, version: number, blockedModules: Rectangle[]): void {
+export function placeDarkModule(qrCode: QRCode, version: number, blockedModules: Rectangle[]): void {
   qrCode.moduleMatrix[4 * version + 9][8] = true;
   blockedModules.push({ x: 8, y: 4 * version + 9, width: 1, height: 1 });
 }
 
-export function placeFinderPatterns<T>(qrCode: QRCode<T>, blockedModules: Rectangle[]): void {
+export function placeFinderPatterns(qrCode: QRCode, blockedModules: Rectangle[]): void {
   const length = qrCode.moduleMatrix.length;
   const locations = [0, 0, length - 7, 0, 0, length - 7];
 
@@ -219,7 +219,7 @@ export function placeFinderPatterns<T>(qrCode: QRCode<T>, blockedModules: Rectan
   }
 }
 
-export function placeAlignmentPatterns<T>(qrCode: QRCode<T>, alignmentPatternLocations: Point[], blockedModules: Rectangle[]) {
+export function placeAlignmentPatterns(qrCode: QRCode, alignmentPatternLocations: Point[], blockedModules: Rectangle[]) {
   alignmentPatternLocations.forEach((loc) => {
     const alignmentPatternRect: Rectangle = { x: loc.x, y: loc.y, width: 5, height: 5 };
     let blocked = false;
@@ -243,7 +243,7 @@ export function placeAlignmentPatterns<T>(qrCode: QRCode<T>, alignmentPatternLoc
   });
 }
 
-export function placeTimingPatterns<T>(qrCode: QRCode<T>, blockedModules: Rectangle[]): void {
+export function placeTimingPatterns(qrCode: QRCode, blockedModules: Rectangle[]): void {
   const length = qrCode.moduleMatrix.length;
   for (let i = 8; i < length - 8; i++) {
     if (i % 2 === 0) {

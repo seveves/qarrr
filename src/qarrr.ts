@@ -1,5 +1,5 @@
-import { Color } from './color';
-import { QRCode, CanvasQRCode } from './qrcode';
+import { Color, colorToString } from './color';
+import { QRCode, QRCodeData } from './qrcode';
 import { ECCLevel, EncodingMode } from './enums';
 import { CodewordBlock, ECCInfo, VersionInfo, VersionInfoDetails, Rectangle, AlignmentPattern, Point } from './models';
 
@@ -18,18 +18,15 @@ export interface QArrOptions {
 }
 
 export class QArr {
-  public createCanvas(text: string, options?: QArrOptions) {
-    return this.create<HTMLCanvasElement>(text, v => new CanvasQRCode(v), options);
-  }
-
-  public create<T>(text: string, factory: (version: number) => QRCode<T>,  options?: QArrOptions): T {
-    const ecc = options && options.ecc ? options.ecc : ECCLevel.H;
+  public create(text: string, options?: QArrOptions): QRCodeData {
+    const ecc = options != null && options.ecc != null ? options.ecc : ECCLevel.H;
     const encoding = this.getEncoding(text);
     const coded = this.textToBinary(text, encoding);
-    const version = this.getVersion(text.length, encoding, ecc);
+    const dataInputLength = encoding === EncodingMode.Byte ? coded.length / 8 : text.length;
+    const version = this.getVersion(dataInputLength, encoding, ecc);
     const modeIndicator = Utils.dtb(encoding, 4);
     const countIndicatorLength = this.getCountIndicatorLength(version, encoding);
-    const countIndicator = Utils.dtb(text.length, countIndicatorLength);
+    const countIndicator = Utils.dtb(dataInputLength, countIndicatorLength);
     let bits = modeIndicator + countIndicator + coded;
 
     // filling up data code word
@@ -104,7 +101,7 @@ export class QArr {
     interleavedData += Array.from({ length: Const.REMAINDER_BITS[version - 1] }, (k, v) => '0').join('');
 
     // place interleaved data on module matrix
-    const qrCode = factory(version);
+    const qrCode = new QRCode(version);
     const blockedModules: Rectangle[] = [];
     ModulePlacer.placeFinderPatterns(qrCode, blockedModules);
     ModulePlacer.reserveSeperatorAreas(qrCode.moduleMatrix.length, blockedModules);
@@ -113,7 +110,7 @@ export class QArr {
     ModulePlacer.placeDarkModule(qrCode, version, blockedModules);
     ModulePlacer.reserveVersionAreas(qrCode.moduleMatrix.length, version, blockedModules);
     ModulePlacer.placeDataWords(qrCode, interleavedData, blockedModules);
-    const maskVersion = ModulePlacer.maskCode(qrCode, factory, version, blockedModules, ecc);
+    const maskVersion = ModulePlacer.maskCode(qrCode, version, blockedModules, ecc);
     const formatStr = Format.getFormatString(ecc, maskVersion);
     ModulePlacer.placeFormat(qrCode, formatStr);
     if (version >= 7) {
@@ -132,7 +129,36 @@ export class QArr {
       lightColor = options.lightColor || lightColor;
       drawQuietZones = options.drawQuietZones == null ? drawQuietZones : options.drawQuietZones;
     }
-    return qrCode.getGraphic(pixelsPerModule, darkColor, lightColor, drawQuietZones);
+    return { qrCode, pixelsPerModule, darkColor, lightColor, drawQuietZones };
+  }
+
+  public toCanvas(qrcd: QRCodeData): HTMLCanvasElement {
+    const size = (qrcd.qrCode.moduleMatrix.length - (qrcd.drawQuietZones ? 0 : 8)) * qrcd.pixelsPerModule;
+    const offset = qrcd.drawQuietZones ? 0 : 4 * qrcd.pixelsPerModule;
+  
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+  
+    if (canvas.getContext) {
+      const ctx = canvas.getContext('2d');
+      for (let x = 0; x < size + offset; x = x + qrcd.pixelsPerModule) {
+        for (let y = 0; y < size + offset; y = y + qrcd.pixelsPerModule) {
+          const xIndex = (y + qrcd.pixelsPerModule) / qrcd.pixelsPerModule - 1;
+          const yIndex = (x + qrcd.pixelsPerModule) / qrcd.pixelsPerModule - 1;
+          const m = qrcd.qrCode.moduleMatrix[xIndex][yIndex];
+          if (m) {
+            ctx.fillStyle = colorToString(qrcd.darkColor);
+            ctx.fillRect(x - offset, y - offset, qrcd.pixelsPerModule, qrcd.pixelsPerModule);
+          } else {
+            ctx.fillStyle = colorToString(qrcd.lightColor);
+            ctx.fillRect(x - offset, y - offset, qrcd.pixelsPerModule, qrcd.pixelsPerModule);
+          }
+        }
+      }
+      return canvas;
+    }
+    return null;
   }
 
   private calculateECCWords(bits: string, ecc: ECCInfo): string[] {
