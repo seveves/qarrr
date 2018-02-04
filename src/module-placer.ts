@@ -150,18 +150,18 @@ export function placeDataWords<T>(qrCode: QRCode<T>, data: string, blockedModule
       if (up) {
         y = length - yMod;
         if (datawords.length > 0 && !isBlocked({ x, y, width: 1,  height: 1 } as Rectangle, blockedModules)) {
-          qrCode.moduleMatrix[y][x] = datawords.pop();
+          qrCode.moduleMatrix[y][x] = datawords.shift();
         }
         if (datawords.length > 0 && x > 0 && !isBlocked({ y, x: x - 1, width: 1, height: 1 } as Rectangle, blockedModules)) {
-          qrCode.moduleMatrix[y][x - 1] = datawords.pop();
+          qrCode.moduleMatrix[y][x - 1] = datawords.shift();
         }
       } else {
         y = yMod - 1;
         if (datawords.length > 0 && !isBlocked({ x, y, width: 1, height: 1 } as Rectangle, blockedModules)) {
-          qrCode.moduleMatrix[y][x] = datawords.pop();
+          qrCode.moduleMatrix[y][x] = datawords.shift();
         }
         if (datawords.length > 0 && x > 0 && !isBlocked({ y, x: x - 1, width: 1, height: 1 } as Rectangle, blockedModules)) {
-          qrCode.moduleMatrix[y][x - 1] = datawords.pop();
+          qrCode.moduleMatrix[y][x - 1] = datawords.shift();
         }
       }
     }
