@@ -17,7 +17,7 @@ export interface QArrOptions {
   drawQuietZones?: boolean;
 }
 
-export class QArr {
+export class QArrr {
   public create(text: string, options?: QArrOptions): QRCodeData {
     const ecc = options != null && options.ecc != null ? options.ecc : ECCLevel.H;
     const encoding = this.getEncoding(text);
