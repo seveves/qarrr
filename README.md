@@ -5,7 +5,9 @@
 
 Ahoy! 'tis a library wit' naught dependencies that generates nasty QR codes in yer browser as a Canvas element. Ay!
 
-## Example
+## Examples
+
+### Basic Usage
 ```javascript
 import qarrr from 'qarrr';
 
@@ -14,6 +16,10 @@ var qrcd = q.create('QArrr!');
 var canvas = q.toCanvas(qrcd);
 document.body.appendChild(canvas);
 ```
+
+### Frameworks
+* [Angular](https://stackblitz.com/edit/angular-qarrr?ctl=1&embed=1&file=app/app.component.html&view=preview)
+
 
 ## Credits
 * [Thonky QR Code Tutorial](https://www.thonky.com/qr-code-tutorial/introduction)
