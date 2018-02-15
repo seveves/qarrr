@@ -9,9 +9,9 @@ Ahoy! 'tis a library wit' naught dependencies that generates nasty QR codes in y
 
 ### Basic Usage
 ```javascript
-import qarrr from 'qarrr';
+import { Qarrr } from 'qarrr';
 
-var q = new qarrr.QArrr();
+var q = new QArrr();
 var qrcd = q.create('QArrr!');
 var canvas = q.toCanvas(qrcd);
 document.body.appendChild(canvas);
