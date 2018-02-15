@@ -19,6 +19,7 @@ document.body.appendChild(canvas);
 
 ### Frameworks
 * [Angular](https://stackblitz.com/edit/angular-qarrr?ctl=1&embed=1&file=app/app.component.html&view=preview)
+* [Preact](https://codepen.io/seveves/pen/gvGWPz?editors=0010)
 
 
 ## Credits
