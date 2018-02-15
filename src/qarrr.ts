@@ -290,29 +290,8 @@ export class QArrr {
   }
 
   private toByteArray(str) {
-    const bytes = [];
-    for (let i = 0; i < str.length; i++) {
-      let charcode = str.charCodeAt(i);
-      if (charcode < 0x80) {
-        bytes.push(charcode);
-      } else if (charcode < 0x800) {
-        bytes.push(0xc0 | (charcode >> 6), 
-                   0x80 | (charcode & 0x3f));
-      } else if (charcode < 0xd800 || charcode >= 0xe000) {
-        bytes.push(0xe0 | (charcode >> 12), 
-                   0x80 | ((charcode >> 6) & 0x3f), 
-                   0x80 | (charcode & 0x3f));
-      } else {
-        i++;
-        charcode = 0x10000 + (((charcode & 0x3ff) << 10) |
-                   (str.charCodeAt(i) & 0x3ff));
-        bytes.push(0xf0 | (charcode >> 18), 
-                   0x80 | ((charcode >> 12) & 0x3f), 
-                   0x80 | ((charcode >> 6) & 0x3f), 
-                   0x80 | (charcode & 0x3f));
-      }
-    }
-    return bytes;
+    const utf8 = unescape(encodeURIComponent(str));
+    return utf8.split('').map((c, i) => utf8.charCodeAt(i));
   }
 
   private binaryStringToBitBlocks(bits: string): string[] {
