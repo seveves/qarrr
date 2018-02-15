@@ -11,7 +11,7 @@ export const patterns = {
   pattern8: (x: number, y: number) => ((((x + y) % 2) + ((x * y) % 3)) % 2 === 0),
 };
 
-export function score<T>(qrCode: QRCode<T>) {
+export function score(qrCode: QRCode) {
   let score1 = 0;
   let score2 = 0;
   let score3 = 0;
